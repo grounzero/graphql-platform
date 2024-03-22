@@ -72,6 +72,57 @@ public class ErrorTests(ITestOutputHelper output)
     }
 
     [Fact]
+    // TODO: There is no error produced if the leaf node is nullable
+    public async Task Resolve_ResolveByKey_Sequence_Second_Service_Offline_Leaf_Field_Nullable()
+    {
+        // arrange
+        using var demoProject = await DemoProject.CreateAsync();
+
+        // act
+        var fusionGraph =
+            await new FusionGraphComposer(logFactory: _logFactory)
+                .ComposeAsync(
+                    new[]
+                    {
+                        demoProject.Reviews.ToConfiguration(ReviewsExtensionSdl),
+                        demoProject.Accounts.ToConfiguration(AccountsExtensionSdl),
+                    },
+                    new FusionFeatureCollection(FusionFeatures.NodeField));
+
+        var executor = await new ServiceCollection()
+            .AddSingleton<IHttpClientFactory>(
+                new ErrorFactory(demoProject.HttpClientFactory, demoProject.Accounts.Name))
+            .AddSingleton(demoProject.WebSocketConnectionFactory)
+            .AddFusionGatewayServer()
+            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
+            .BuildRequestExecutorAsync();
+
+        var request = Parse(
+            """
+            query {
+              reviews {
+                body
+                author? {
+                  birthdate?
+                }
+              }
+            }
+            """);
+
+        // act
+        var result = await executor.ExecuteAsync(
+            QueryRequestBuilder
+                .New()
+                .SetQuery(request)
+                .Create());
+
+        // assert
+        var snapshot = new Snapshot();
+        CollectErrorSnapshotData(snapshot, request, result);
+        snapshot.MatchMarkdownSnapshot();
+    }
+
+    [Fact]
     public async Task Resolve_ResolveByKey_Sequence_Second_Service_Offline_Field_NonNull()
     {
         // arrange
@@ -265,6 +316,94 @@ public class ErrorTests(ITestOutputHelper output)
     }
 
     [Fact]
+    // TODO: There is no error produced if the leaf node is nullable
+    public async Task Resolve_Service_Offline_Leaf_Field_Nullable()
+    {
+        // arrange
+        using var demoProject = await DemoProject.CreateAsync();
+
+        // act
+        var fusionGraph =
+            await new FusionGraphComposer(logFactory: _logFactory)
+                .ComposeAsync(
+                    new[] { demoProject.Reviews2.ToConfiguration(Reviews2ExtensionSdl), },
+                    new FusionFeatureCollection(FusionFeatures.NodeField));
+
+        var executor = await new ServiceCollection()
+            .AddSingleton<IHttpClientFactory>(
+                new ErrorFactory(demoProject.HttpClientFactory, demoProject.Reviews2.Name))
+            .AddSingleton(demoProject.WebSocketConnectionFactory)
+            .AddFusionGatewayServer()
+            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
+            .BuildRequestExecutorAsync();
+
+        var request = Parse(
+            """
+            {
+              # This field should be null because of the error
+              reviewById(id: "UmV2aWV3Cmkx")? {
+                body?
+              }
+            }
+            """);
+
+        // act
+        var result = await executor.ExecuteAsync(
+            QueryRequestBuilder
+                .New()
+                .SetQuery(request)
+                .Create());
+
+        // assert
+        var snapshot = new Snapshot();
+        CollectErrorSnapshotData(snapshot, request, result);
+        snapshot.MatchMarkdownSnapshot();
+    }
+
+    [Fact]
+    public async Task Resolve_Service_Offline_Entry_Field_NonNull()
+    {
+        // arrange
+        using var demoProject = await DemoProject.CreateAsync();
+
+        // act
+        var fusionGraph =
+            await new FusionGraphComposer(logFactory: _logFactory)
+                .ComposeAsync(
+                    new[] { demoProject.Reviews2.ToConfiguration(Reviews2ExtensionSdl), },
+                    new FusionFeatureCollection(FusionFeatures.NodeField));
+
+        var executor = await new ServiceCollection()
+            .AddSingleton<IHttpClientFactory>(
+                new ErrorFactory(demoProject.HttpClientFactory, demoProject.Reviews2.Name))
+            .AddSingleton(demoProject.WebSocketConnectionFactory)
+            .AddFusionGatewayServer()
+            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
+            .BuildRequestExecutorAsync();
+
+        var request = Parse(
+            """
+            {
+              reviewById(id: "UmV2aWV3Cmkx")! {
+                body
+              }
+            }
+            """);
+
+        // act
+        var result = await executor.ExecuteAsync(
+            QueryRequestBuilder
+                .New()
+                .SetQuery(request)
+                .Create());
+
+        // assert
+        var snapshot = new Snapshot();
+        CollectErrorSnapshotData(snapshot, request, result);
+        snapshot.MatchMarkdownSnapshot();
+    }
+
+    [Fact]
     public async Task Resolve_Followed_By_Parallel_Resolve_One_Service_Offline_Field_Nullable()
     {
         // arrange
@@ -373,49 +512,6 @@ public class ErrorTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task Resolve_Service_Offline_Entry_Field_NonNull()
-    {
-        // arrange
-        using var demoProject = await DemoProject.CreateAsync();
-
-        // act
-        var fusionGraph =
-            await new FusionGraphComposer(logFactory: _logFactory)
-                .ComposeAsync(
-                    new[] { demoProject.Reviews2.ToConfiguration(Reviews2ExtensionSdl), },
-                    new FusionFeatureCollection(FusionFeatures.NodeField));
-
-        var executor = await new ServiceCollection()
-            .AddSingleton<IHttpClientFactory>(
-                new ErrorFactory(demoProject.HttpClientFactory, demoProject.Reviews2.Name))
-            .AddSingleton(demoProject.WebSocketConnectionFactory)
-            .AddFusionGatewayServer()
-            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
-            .BuildRequestExecutorAsync();
-
-        var request = Parse(
-            """
-            {
-              reviewById(id: "UmV2aWV3Cmkx")! {
-                body
-              }
-            }
-            """);
-
-        // act
-        var result = await executor.ExecuteAsync(
-            QueryRequestBuilder
-                .New()
-                .SetQuery(request)
-                .Create());
-
-        // assert
-        var snapshot = new Snapshot();
-        CollectErrorSnapshotData(snapshot, request, result);
-        snapshot.MatchMarkdownSnapshot();
-    }
-
-    [Fact]
     public async Task Resolve_Sequence_Second_Service_Offline_Field_Nullable()
     {
         // arrange
@@ -447,6 +543,58 @@ public class ErrorTests(ITestOutputHelper output)
                 body
                 author? {
                   username
+                }
+              }
+            }
+            """);
+
+        // act
+        var result = await executor.ExecuteAsync(
+            QueryRequestBuilder
+                .New()
+                .SetQuery(request)
+                .Create());
+
+        // assert
+        var snapshot = new Snapshot();
+        CollectErrorSnapshotData(snapshot, request, result);
+        snapshot.MatchMarkdownSnapshot();
+    }
+
+    [Fact]
+    // TODO: There is no error produced if the leaf node is nullable
+    public async Task Resolve_Sequence_Second_Service_Offline_Leaf_Field_Nullable()
+    {
+        // arrange
+        using var demoProject = await DemoProject.CreateAsync();
+
+        // act
+        var fusionGraph =
+            await new FusionGraphComposer(logFactory: _logFactory)
+                .ComposeAsync(
+                    new[]
+                    {
+                        demoProject.Accounts.ToConfiguration(AccountsExtensionSdl),
+                        demoProject.Reviews2.ToConfiguration(Reviews2ExtensionSdl),
+                    },
+                    new FusionFeatureCollection(FusionFeatures.NodeField));
+
+        var executor = await new ServiceCollection()
+            .AddSingleton<IHttpClientFactory>(
+                new ErrorFactory(demoProject.HttpClientFactory, demoProject.Accounts.Name))
+            .AddSingleton(demoProject.WebSocketConnectionFactory)
+            .AddFusionGatewayServer()
+            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
+            .BuildRequestExecutorAsync();
+
+        var request = Parse(
+            """
+            {
+              reviewById(id: "UmV2aWV3Cmkx") {
+                body
+                # This field should be null because of the error
+                author? {
+                  username?
                 }
               }
             }
@@ -516,6 +664,57 @@ public class ErrorTests(ITestOutputHelper output)
     }
 
     [Fact]
+    // TODO: There is no error produced if the leaf node is nullable
+    public async Task Resolve_Parallel_One_Service_Offline_Leaf_Field_Nullable()
+    {
+        // arrange
+        using var demoProject = await DemoProject.CreateAsync();
+
+        var fusionGraph = await new FusionGraphComposer(logFactory: _logFactory).ComposeAsync(
+            new[]
+            {
+                demoProject.Accounts.ToConfiguration(AccountsExtensionSdl),
+                demoProject.Reviews2.ToConfiguration(Reviews2ExtensionSdl),
+            },
+            new FusionFeatureCollection(FusionFeatures.NodeField));
+
+        var executor = await new ServiceCollection()
+            .AddSingleton<IHttpClientFactory>(
+                new ErrorFactory(demoProject.HttpClientFactory, demoProject.Accounts.Name))
+            .AddSingleton(demoProject.WebSocketConnectionFactory)
+            .AddFusionGatewayServer()
+            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
+            .BuildRequestExecutorAsync();
+
+        var request = Parse(
+            """
+            {
+              viewer {
+                # User should be nulled because of the error
+                user? {
+                  name?
+                }
+                latestReview {
+                  body
+                }
+              }
+            }
+            """);
+
+        // act
+        await using var result = await executor.ExecuteAsync(
+            QueryRequestBuilder
+                .New()
+                .SetQuery(request)
+                .Create());
+
+        // assert
+        var snapshot = new Snapshot();
+        CollectErrorSnapshotData(snapshot, request, result);
+        snapshot.MatchMarkdownSnapshot();
+    }
+
+    [Fact]
     public async Task Resolve_Parallel_One_Service_Offline_Sub_Field_On_Shared_Entry_Type_Nullable()
     {
         // arrange
@@ -541,7 +740,7 @@ public class ErrorTests(ITestOutputHelper output)
             """
             {
               viewer {
-                user {
+                user? {
                   name
                 }
                 latestReview {
@@ -665,6 +864,42 @@ public class ErrorTests(ITestOutputHelper output)
         snapshot.MatchMarkdownSnapshot();
     }
 
+    // [Fact]
+    // public async Task Test()
+    // {
+    //     var subgraphA = CreateSubgraphAsync("a", builder =>
+    //     {
+    //         builder.AddQueryType(d =>
+    //             d.Name("Query").Field("a").Resolve((context) => ValueTask.FromResult<object?>("a")));
+    //     });
+    // }
+    //
+    // private async Task<Subgraph> CreateSubgraphAsync(string subgraphName,
+    //     Action<IRequestExecutorBuilder> configureBuilder)
+    // {
+    //     var testServerFactory = new TestServerFactory();
+    //
+    //     var testServer = testServerFactory.Create(
+    //         services =>
+    //         {
+    //             var builder = services
+    //                 .AddRouting()
+    //                 .AddGraphQLServer();
+    //
+    //             configureBuilder(builder);
+    //         },
+    //         app =>
+    //         {
+    //             app.UseRouting().UseEndpoints(endpoints => endpoints.MapGraphQL());
+    //         });
+    //
+    //     var schema = await testServer.Services.GetSchemaAsync();
+    //
+    //     return new Subgraph(subgraphName, testServer, schema);
+    // }
+    //
+    // private record Subgraph(string SubgraphName, TestServer TestServer, ISchema Schema);
+
     [Fact]
     public async Task Subgraph_Error_Top_Level_Field()
     {
@@ -759,42 +994,6 @@ public class ErrorTests(ITestOutputHelper output)
         CollectErrorSnapshotData(snapshot, request, result);
         snapshot.MatchMarkdownSnapshot();
     }
-
-    [Fact]
-    public async Task Test()
-    {
-        var subgraphA = CreateSubgraphAsync("a", builder =>
-        {
-            builder.AddQueryType(d =>
-                d.Name("Query").Field("a").Resolve((context) => ValueTask.FromResult<object?>("a")));
-        });
-    }
-
-    private async Task<Subgraph> CreateSubgraphAsync(string subgraphName,
-        Action<IRequestExecutorBuilder> configureBuilder)
-    {
-        var testServerFactory = new TestServerFactory();
-
-        var testServer = testServerFactory.Create(
-            services =>
-            {
-                var builder = services
-                    .AddRouting()
-                    .AddGraphQLServer();
-
-                configureBuilder(builder);
-            },
-            app =>
-            {
-                app.UseRouting().UseEndpoints(endpoints => endpoints.MapGraphQL());
-            });
-
-        var schema = await testServer.Services.GetSchemaAsync();
-
-        return new Subgraph(subgraphName, testServer, schema);
-    }
-
-    private record Subgraph(string SubgraphName, TestServer TestServer, ISchema Schema);
 
     [Fact]
     public async Task Subgraph_Error_For_Field_Within_A_List()

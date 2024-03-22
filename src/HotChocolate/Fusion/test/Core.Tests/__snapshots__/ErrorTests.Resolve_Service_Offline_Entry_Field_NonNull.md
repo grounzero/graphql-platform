@@ -16,8 +16,22 @@
 {
   "errors": [
     {
-      "message": "Unexpected Subgraph Failure",
-      "path": ["reviewById"]
+      "message": "Cannot return null for non-nullable field.",
+      "locations": [
+        {
+          "line": 2,
+          "column": 3
+        }
+      ],
+      "path": [
+        "reviewById"
+      ],
+      "extensions": {
+        "code": "HC0018"
+      }
+    },
+    {
+      "message": "Internal Execution Error"
     }
   ],
   "data": null

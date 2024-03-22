@@ -21,8 +21,7 @@
 {
   "errors": [
     {
-      "message": "Unexpected Subgraph Failure",
-      "path": ["viewer", "user"]
+      "message": "Internal Execution Error"
     }
   ],
   "data": {
@@ -58,12 +57,9 @@
       },
       {
         "type": "Compose",
-        "selectionSetIds": [
-          0
-        ]
+        "selectionSetIds": [0]
       }
     ]
   }
 }
 ```
-

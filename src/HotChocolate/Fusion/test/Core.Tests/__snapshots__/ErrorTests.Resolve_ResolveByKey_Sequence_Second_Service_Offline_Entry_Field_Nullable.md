@@ -19,36 +19,79 @@
 {
   "errors": [
     {
-      "message": "Unexpected Subgraph Failure",
-      "path": [
-        "reviews",
-        0,
-        "author"
-      ]
-    },
-    {
-      "message": "Unexpected Subgraph Failure",
-      "path": [
-        "reviews",
-        1,
-        "author"
-      ]
-    },
-    {
-      "message": "Unexpected Subgraph Failure",
-      "path": [
-        "reviews",
-        2,
-        "author"
-      ]
-    },
-    {
-      "message": "Unexpected Subgraph Failure",
+      "message": "Cannot return null for non-nullable field.",
+      "locations": [
+        {
+          "line": 5,
+          "column": 7
+        }
+      ],
       "path": [
         "reviews",
         3,
-        "author"
-      ]
+        "author",
+        "birthdate"
+      ],
+      "extensions": {
+        "code": "HC0018"
+      }
+    },
+    {
+      "message": "Cannot return null for non-nullable field.",
+      "locations": [
+        {
+          "line": 5,
+          "column": 7
+        }
+      ],
+      "path": [
+        "reviews",
+        2,
+        "author",
+        "birthdate"
+      ],
+      "extensions": {
+        "code": "HC0018"
+      }
+    },
+    {
+      "message": "Cannot return null for non-nullable field.",
+      "locations": [
+        {
+          "line": 5,
+          "column": 7
+        }
+      ],
+      "path": [
+        "reviews",
+        1,
+        "author",
+        "birthdate"
+      ],
+      "extensions": {
+        "code": "HC0018"
+      }
+    },
+    {
+      "message": "Cannot return null for non-nullable field.",
+      "locations": [
+        {
+          "line": 5,
+          "column": 7
+        }
+      ],
+      "path": [
+        "reviews",
+        0,
+        "author",
+        "birthdate"
+      ],
+      "extensions": {
+        "code": "HC0018"
+      }
+    },
+    {
+      "message": "Internal Execution Error"
     }
   ],
   "data": {

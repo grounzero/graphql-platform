@@ -1,11 +1,11 @@
-# Resolve_Service_Offline_Entry_Field_Nullable
+# Resolve_Service_Offline_Leaf_Field_Nullable
 
 ## User Request
 
 ```graphql
 {
   reviewById(id: "UmV2aWV3Cmkx")? {
-    body
+    body?
   }
 }
 ```
@@ -29,14 +29,14 @@
 
 ```json
 {
-  "document": "{ reviewById(id: \u0022UmV2aWV3Cmkx\u0022)? { body } }",
+  "document": "{ reviewById(id: \u0022UmV2aWV3Cmkx\u0022)? { body? } }",
   "rootNode": {
     "type": "Sequence",
     "nodes": [
       {
         "type": "Resolve",
         "subgraph": "Reviews2",
-        "document": "query fetch_reviewById_1 { reviewById(id: \u0022UmV2aWV3Cmkx\u0022) { body } }",
+        "document": "query fetch_reviewById_1 { reviewById(id: \u0022UmV2aWV3Cmkx\u0022) { body? } }",
         "selectionSetId": 0
       },
       {

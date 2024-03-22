@@ -5,7 +5,7 @@
 ```graphql
 {
   viewer {
-    user {
+    user? {
       name
     }
     latestReview {
@@ -21,8 +21,7 @@
 {
   "errors": [
     {
-      "message": "Unexpected Subgraph Failure",
-      "path": ["viewer", "user"]
+      "message": "Internal Execution Error"
     }
   ],
   "data": {
@@ -40,7 +39,7 @@
 
 ```json
 {
-  "document": "{ viewer { user { name } latestReview { body } } }",
+  "document": "{ viewer { user? { name } latestReview { body } } }",
   "rootNode": {
     "type": "Sequence",
     "nodes": [
@@ -50,7 +49,7 @@
           {
             "type": "Resolve",
             "subgraph": "Accounts",
-            "document": "query fetch_viewer_1 { viewer { user { name } } }",
+            "document": "query fetch_viewer_1 { viewer { user? { name } } }",
             "selectionSetId": 0
           },
           {

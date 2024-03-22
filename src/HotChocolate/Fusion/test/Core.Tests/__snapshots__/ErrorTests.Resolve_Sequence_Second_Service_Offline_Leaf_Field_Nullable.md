@@ -1,4 +1,4 @@
-# Resolve_Sequence_Second_Service_Offline_Field_Nullable
+# Resolve_Sequence_Second_Service_Offline_Leaf_Field_Nullable
 
 ## User Request
 
@@ -7,7 +7,7 @@
   reviewById(id: "UmV2aWV3Cmkx") {
     body
     author? {
-      username
+      username?
     }
   }
 }
@@ -18,23 +18,6 @@
 ```json
 {
   "errors": [
-    {
-      "message": "Cannot return null for non-nullable field.",
-      "locations": [
-        {
-          "line": 5,
-          "column": 7
-        }
-      ],
-      "path": [
-        "reviewById",
-        "author",
-        "username"
-      ],
-      "extensions": {
-        "code": "HC0018"
-      }
-    },
     {
       "message": "Internal Execution Error"
     }
@@ -52,7 +35,7 @@
 
 ```json
 {
-  "document": "{ reviewById(id: \u0022UmV2aWV3Cmkx\u0022) { body author? { username } } }",
+  "document": "{ reviewById(id: \u0022UmV2aWV3Cmkx\u0022) { body author? { username? } } }",
   "rootNode": {
     "type": "Sequence",
     "nodes": [
@@ -69,18 +52,14 @@
       },
       {
         "type": "Compose",
-        "selectionSetIds": [
-          0
-        ]
+        "selectionSetIds": [0]
       },
       {
         "type": "Resolve",
         "subgraph": "Accounts",
-        "document": "query fetch_reviewById_2($__fusion_exports__1: ID!) { userById(id: $__fusion_exports__1) { username } }",
+        "document": "query fetch_reviewById_2($__fusion_exports__1: ID!) { userById(id: $__fusion_exports__1) { username? } }",
         "selectionSetId": 2,
-        "path": [
-          "userById"
-        ],
+        "path": ["userById"],
         "requires": [
           {
             "variable": "__fusion_exports__1"
@@ -89,9 +68,7 @@
       },
       {
         "type": "Compose",
-        "selectionSetIds": [
-          2
-        ]
+        "selectionSetIds": [2]
       }
     ]
   },
@@ -100,4 +77,3 @@
   }
 }
 ```
-

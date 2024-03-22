@@ -1,12 +1,12 @@
-# Resolve_Parallel_Both_Services_Offline_Shared_Entry_Field_Nullable
+# Resolve_Parallel_One_Service_Offline_Leaf_Field_Nullable
 
 ## User Request
 
 ```graphql
 {
-  viewer? {
-    user {
-      name
+  viewer {
+    user? {
+      name?
     }
     latestReview {
       body
@@ -22,13 +22,15 @@
   "errors": [
     {
       "message": "Internal Execution Error"
-    },
-    {
-      "message": "Internal Execution Error"
     }
   ],
   "data": {
-    "viewer": null
+    "viewer": {
+      "user": null,
+      "latestReview": {
+        "body": "Love it!"
+      }
+    }
   }
 }
 ```
@@ -37,7 +39,7 @@
 
 ```json
 {
-  "document": "{ viewer? { user { name } latestReview { body } } }",
+  "document": "{ viewer { user? { name? } latestReview { body } } }",
   "rootNode": {
     "type": "Sequence",
     "nodes": [
@@ -47,13 +49,13 @@
           {
             "type": "Resolve",
             "subgraph": "Accounts",
-            "document": "query fetch_viewer_1 { viewer { user { name } } }",
+            "document": "query fetch_viewer_1 { viewer { user? { name? } } }",
             "selectionSetId": 0
           },
           {
             "type": "Resolve",
             "subgraph": "Reviews2",
-            "document": "query fetch_viewer_2 { viewer? { latestReview { body } } }",
+            "document": "query fetch_viewer_2 { viewer { latestReview { body } } }",
             "selectionSetId": 0
           }
         ]
