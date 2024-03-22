@@ -1,14 +1,10 @@
 using System.Net;
 using CookieCrumble;
-using HotChocolate.AspNetCore.Tests.Utilities;
 using HotChocolate.Execution;
-using HotChocolate.Execution.Configuration;
 using HotChocolate.Fusion.Composition;
 using HotChocolate.Fusion.Composition.Features;
 using HotChocolate.Fusion.Shared;
 using HotChocolate.Skimmed.Serialization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 using static HotChocolate.Fusion.Shared.DemoProjectSchemaExtensions;
@@ -17,7 +13,7 @@ using static HotChocolate.Fusion.TestHelper;
 
 namespace HotChocolate.Fusion;
 
-public class ErrorTests(ITestOutputHelper output)
+public class TransportErrorTests(ITestOutputHelper output)
 {
     private readonly Func<ICompositionLog> _logFactory = () => new TestCompositionLog(output);
 
@@ -812,7 +808,6 @@ public class ErrorTests(ITestOutputHelper output)
         snapshot.MatchMarkdownSnapshot();
     }
 
-
     [Fact]
     public async Task Resolve_Parallel_Both_Services_Offline_Shared_Entry_Field_Nullable()
     {
@@ -853,239 +848,6 @@ public class ErrorTests(ITestOutputHelper output)
 
         // act
         await using var result = await executor.ExecuteAsync(
-            QueryRequestBuilder
-                .New()
-                .SetQuery(request)
-                .Create());
-
-        // assert
-        var snapshot = new Snapshot();
-        CollectErrorSnapshotData(snapshot, request, result);
-        snapshot.MatchMarkdownSnapshot();
-    }
-
-    // [Fact]
-    // public async Task Test()
-    // {
-    //     var subgraphA = CreateSubgraphAsync("a", builder =>
-    //     {
-    //         builder.AddQueryType(d =>
-    //             d.Name("Query").Field("a").Resolve((context) => ValueTask.FromResult<object?>("a")));
-    //     });
-    // }
-    //
-    // private async Task<Subgraph> CreateSubgraphAsync(string subgraphName,
-    //     Action<IRequestExecutorBuilder> configureBuilder)
-    // {
-    //     var testServerFactory = new TestServerFactory();
-    //
-    //     var testServer = testServerFactory.Create(
-    //         services =>
-    //         {
-    //             var builder = services
-    //                 .AddRouting()
-    //                 .AddGraphQLServer();
-    //
-    //             configureBuilder(builder);
-    //         },
-    //         app =>
-    //         {
-    //             app.UseRouting().UseEndpoints(endpoints => endpoints.MapGraphQL());
-    //         });
-    //
-    //     var schema = await testServer.Services.GetSchemaAsync();
-    //
-    //     return new Subgraph(subgraphName, testServer, schema);
-    // }
-    //
-    // private record Subgraph(string SubgraphName, TestServer TestServer, ISchema Schema);
-
-    [Fact]
-    public async Task Subgraph_Error_Top_Level_Field()
-    {
-        // arrange
-        using var demoProject = await DemoProject.CreateAsync();
-
-        // act
-        var fusionGraph =
-            await new FusionGraphComposer(logFactory: _logFactory)
-                .ComposeAsync(
-                    new[] { demoProject.Accounts.ToConfiguration(AccountsExtensionSdl), },
-                    new FusionFeatureCollection(FusionFeatures.NodeField));
-
-        var executor = await new ServiceCollection()
-            .AddSingleton(demoProject.HttpClientFactory)
-            .AddSingleton(demoProject.WebSocketConnectionFactory)
-            .AddFusionGatewayServer()
-            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
-            .BuildRequestExecutorAsync();
-
-        var request = Parse(
-            """
-            {
-              viewer {
-                data {
-                  accountValue
-                }
-              }
-              errorField
-            }
-            """);
-
-        // act
-        var result = await executor.ExecuteAsync(
-            QueryRequestBuilder
-                .New()
-                .SetQuery(request)
-                .Create());
-
-        // assert
-        var snapshot = new Snapshot();
-        CollectErrorSnapshotData(snapshot, request, result);
-        snapshot.MatchMarkdownSnapshot();
-    }
-
-    [Fact]
-    public async Task Subgraph_Error_For_Field_Resolved_In_Sequence()
-    {
-        // arrange
-        using var demoProject = await DemoProject.CreateAsync();
-
-        // act
-        var fusionGraph =
-            await new FusionGraphComposer(logFactory: _logFactory)
-                .ComposeAsync(
-                    new[]
-                    {
-                        demoProject.Accounts.ToConfiguration(AccountsExtensionSdl),
-                        demoProject.Reviews2.ToConfiguration(Reviews2ExtensionSdl),
-                    },
-                    new FusionFeatureCollection(FusionFeatures.NodeField));
-
-        var executor = await new ServiceCollection()
-            .AddSingleton(demoProject.HttpClientFactory)
-            .AddSingleton(demoProject.WebSocketConnectionFactory)
-            .AddFusionGatewayServer()
-            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
-            .BuildRequestExecutorAsync();
-
-        var request = Parse(
-            """
-            {
-              reviewById(id: "UmV2aWV3Cmkx") {
-                body
-                author {
-                  username
-                  errorField
-                }
-              }
-            }
-            """);
-
-        // act
-        var result = await executor.ExecuteAsync(
-            QueryRequestBuilder
-                .New()
-                .SetQuery(request)
-                .Create());
-
-        // assert
-        var snapshot = new Snapshot();
-        CollectErrorSnapshotData(snapshot, request, result);
-        snapshot.MatchMarkdownSnapshot();
-    }
-
-    [Fact]
-    public async Task Subgraph_Error_For_Field_Within_A_List()
-    {
-        // arrange
-        using var demoProject = await DemoProject.CreateAsync();
-
-        // act
-        var fusionGraph =
-            await new FusionGraphComposer(logFactory: _logFactory)
-                .ComposeAsync(
-                    new[]
-                    {
-                        demoProject.Accounts.ToConfiguration(AccountsExtensionSdl),
-                        demoProject.Reviews2.ToConfiguration(Reviews2ExtensionSdl),
-                    },
-                    new FusionFeatureCollection(FusionFeatures.NodeField));
-
-        var executor = await new ServiceCollection()
-            .AddSingleton(demoProject.HttpClientFactory)
-            .AddSingleton(demoProject.WebSocketConnectionFactory)
-            .AddFusionGatewayServer()
-            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
-            .BuildRequestExecutorAsync();
-
-        var request = Parse(
-            """
-            {
-              userById(id: "VXNlcgppMQ==") {
-                account1: birthdate
-                account2: birthdate
-                username
-                reviews {
-                  body
-                  errorField
-                }
-              }
-            }
-            """);
-
-        // act
-        var result = await executor.ExecuteAsync(
-            QueryRequestBuilder
-                .New()
-                .SetQuery(request)
-                .Create());
-
-        // assert
-        var snapshot = new Snapshot();
-        CollectErrorSnapshotData(snapshot, request, result);
-        snapshot.MatchMarkdownSnapshot();
-    }
-
-    [Fact]
-    public async Task Subgraph_Error_For_Field_Resolved_Via_Key_Batch()
-    {
-        // arrange
-        using var demoProject = await DemoProject.CreateAsync();
-
-        // act
-        var fusionGraph =
-            await new FusionGraphComposer(logFactory: _logFactory)
-                .ComposeAsync(
-                    new[]
-                    {
-                        demoProject.Accounts.ToConfiguration(AccountsExtensionSdl),
-                        demoProject.Reviews2.ToConfiguration(Reviews2ExtensionSdl),
-                    },
-                    new FusionFeatureCollection(FusionFeatures.NodeField));
-
-        var executor = await new ServiceCollection()
-            .AddSingleton(demoProject.HttpClientFactory)
-            .AddSingleton(demoProject.WebSocketConnectionFactory)
-            .AddFusionGatewayServer()
-            .ConfigureFromDocument(SchemaFormatter.FormatAsDocument(fusionGraph))
-            .BuildRequestExecutorAsync();
-
-        var request = Parse(
-            """
-            {
-              reviews {
-                body
-                author {
-                  id
-                  errorField
-                }
-              }
-            }
-            """);
-
-        // act
-        var result = await executor.ExecuteAsync(
             QueryRequestBuilder
                 .New()
                 .SetQuery(request)

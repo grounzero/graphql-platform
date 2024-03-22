@@ -4,12 +4,7 @@
 
 ```graphql
 {
-  viewer {
-    data {
-      accountValue
-    }
-  }
-  errorField
+  field
 }
 ```
 
@@ -19,30 +14,25 @@
 {
   "errors": [
     {
-      "message": "SOME TOP LEVEL USER ERROR",
+      "message": "Field \"field\" produced an error",
       "path": [
-        "errorField"
+        "field"
       ],
       "extensions": {
         "remotePath": [
-          "errorField"
+          "field"
         ],
         "remoteLocations": [
           {
             "line": 1,
-            "column": 68
+            "column": 23
           }
         ]
       }
     }
   ],
   "data": {
-    "viewer": {
-      "data": {
-        "accountValue": "Account"
-      }
-    },
-    "errorField": null
+    "field": null
   }
 }
 ```
@@ -51,14 +41,14 @@
 
 ```json
 {
-  "document": "{ viewer { data { accountValue } } errorField }",
+  "document": "{ field }",
   "rootNode": {
     "type": "Sequence",
     "nodes": [
       {
         "type": "Resolve",
-        "subgraph": "Accounts",
-        "document": "query fetch_viewer_errorField_1 { viewer { data { accountValue } } errorField }",
+        "subgraph": "a",
+        "document": "query fetch_field_1 { field }",
         "selectionSetId": 0
       },
       {
