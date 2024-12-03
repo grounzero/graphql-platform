@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using StrawberryShake.CodeGeneration.CSharp.Builders;
 using StrawberryShake.CodeGeneration.CSharp.Extensions;
 using StrawberryShake.CodeGeneration.Descriptors;
@@ -218,7 +215,7 @@ public partial class JsonResultBuilderGenerator : ClassBaseGenerator<ResultBuild
                 .SetCondition($"!{_obj}.HasValue")
                 .AddCode(
                     typeReference.IsNonNull()
-                        ? ExceptionBuilder.New(TypeNames.ArgumentNullException)
+                        ? CodeLineBuilder.From("return default;")
                         : CodeLineBuilder.From("return null;"));
 
             methodBuilder

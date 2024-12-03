@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using StrawberryShake.CodeGeneration.CSharp.Builders;
 using StrawberryShake.CodeGeneration.Descriptors.TypeDescriptors;
 using StrawberryShake.CodeGeneration.Extensions;
@@ -105,7 +104,7 @@ public partial class TypeMapperGenerator
                         NullCheckBuilder
                             .Inline()
                             .SetCondition(propAccess)
-                            .SetCode(ExceptionBuilder.Inline(TypeNames.ArgumentNullException)));
+                            .SetCode(CodeInlineBuilder.From("default")));
             }
         }
 

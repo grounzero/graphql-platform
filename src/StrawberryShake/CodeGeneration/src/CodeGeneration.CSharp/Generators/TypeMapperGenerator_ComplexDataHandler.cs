@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using StrawberryShake.CodeGeneration.CSharp.Builders;
 using StrawberryShake.CodeGeneration.Descriptors.TypeDescriptors;
 using StrawberryShake.CodeGeneration.Extensions;
@@ -133,8 +130,7 @@ public partial class TypeMapperGenerator
                             NullCheckBuilder
                                 .Inline()
                                 .SetCondition($"{matchedTypeName}.{prop.Name}")
-                                .SetCode(ExceptionBuilder.Inline(
-                                    TypeNames.ArgumentNullException)));
+                                .SetCode(CodeInlineBuilder.From("default")));
                 }
             }
             else
